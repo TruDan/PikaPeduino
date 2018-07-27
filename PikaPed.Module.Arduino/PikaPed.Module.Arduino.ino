@@ -41,6 +41,10 @@ RTC_DS1307 RTC;
 // ---------------------------------------------------------------------
 
 Color statusBar_bg(47, 47, 47);
+Color statusbar_text(255, 255, 255);
+
+Color text_color(0x00, 0xd9, 0xd8); // #00d9d8
+Color error_color(0xff, 0x40, 0x4a); //ff404a
 
 void setColor(Color color)
 {
@@ -50,10 +54,39 @@ void setColor(Color color)
 
 // #region StatusBar
 
+unsigned long lastTempStatusMillis;
+unsigned long currentMillis;
+
 void draw_statusbar_temp() {
-	int chk = DHT.read11(DHT11_PIN);
-	pikaLcd.setFont(Sinclair_M);
-	pikaLcd.print(String(int(DHT.temperature)), 1, 1, 0);
+	if (currentMillis - lastTempStatusMillis >= 5000)
+	{
+		lastTempStatusMillis = currentMillis;
+
+		int chk = DHT.read11(DHT11_PIN);
+		pikaLcd.setFont(Sinclair_M);
+
+		if (DHT.temperature != DHTLIB_INVALID_VALUE)
+		{
+			setColor(statusbar_text);
+			pikaLcd.print(String(int(DHT.temperature)) + "C", 1, 1, 0);
+		}
+		else
+		{
+			setColor(error_color);
+			pikaLcd.print("--C", 1, 1, 0);
+		}
+
+		if (DHT.humidity != DHTLIB_INVALID_VALUE)
+		{
+			setColor(statusbar_text);
+			pikaLcd.print(String(int(DHT.humidity)) + "%", 80, 1, 0);
+		}
+		else
+		{
+			setColor(error_color);
+			pikaLcd.print("--%", 80, 1, 0);
+		}
+	}
 }
 
 void draw_statusbar_time()
@@ -71,8 +104,6 @@ void draw_statusbar_time()
 }
 
 void draw_statusbar() {
-	setColor(statusBar_bg);
-	pikaLcd.fillRect(0, 0, 220, 16);
 
 	pikaLcd.setBackColor(47, 47, 47);
 	pikaLcd.setColor(255, 255, 255);
@@ -81,6 +112,15 @@ void draw_statusbar() {
 	draw_statusbar_time();
 }
 
+
+void do_test() {
+	float val = (analogRead(TEMP0_PIN)) * (5.0 / 1023.0);
+	
+	setColor(text_color);
+	pikaLcd.setFont(SevenSegNumFont);
+
+	pikaLcd.print(String(val), 20, 50);
+}
 
 // #endregion
 
@@ -101,11 +141,16 @@ void setup()
 		RTC.adjust(DateTime(__DATE__, __TIME__));
 	}
 
+	setColor(statusBar_bg);
+	pikaLcd.fillRect(0, 0, 220, 16);
+
 	draw_statusbar();
 
 	pinMode(BTN0_PIN, INPUT);
 	pinMode(BTN1_PIN, INPUT);
 	pinMode(BTN2_PIN, INPUT);
+
+	pinMode(TEMP0_PIN, INPUT);
 
 	pinMode(BUZZER_PIN, OUTPUT);
 }
@@ -116,8 +161,13 @@ void loop()
 
 	while (true)
 	{
+		currentMillis = millis();
+
 		draw_statusbar();
-		delay(500);
+
+		do_test();
+
+		delay(20);
 	}
 
 }

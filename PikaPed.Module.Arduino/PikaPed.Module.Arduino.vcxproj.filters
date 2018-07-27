@@ -50,5 +50,11 @@
     <ClCompile Include="UiComponent.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="PikaPed_S.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Sinclair_M.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
